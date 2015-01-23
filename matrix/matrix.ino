@@ -105,7 +105,34 @@ int img[10][8][8] =
 }
 };
 
+int screen[8][8] = {
+{1,0,0,0,0,0,0,0},
+{0,1,0,0,0,0,0,0},
+{0,0,1,0,0,0,0,0},
+{0,0,0,1,0,0,0,0},
+{0,0,0,0,1,0,0,0},
+{0,0,0,0,0,1,0,0},
+{0,0,0,0,0,0,1,0},
+{0,0,0,0,0,0,0,1}
+};
 
+void drawScreen(){
+  for (int y = 0; y < 8; y++){
+    for (int x = 0; x < 8; x++){    
+      digitalWrite(cols[x], screen[y][x] == 1 ? HIGH : LOW);      
+    }
+    digitalWrite(rows[y], LOW);    
+    delayMicroseconds(10000);    
+    digitalWrite(rows[y], HIGH);
+    delayMicroseconds(10000);
+  }
+}
+
+void loop(){
+  
+  drawScreen();
+
+}
 
 int index = 0;
 long count = 0;
@@ -121,7 +148,7 @@ void setup() {
 }
 
 
-void loop() {
+void loopx() {
   count ++;
   
   int r = analogRead(4);
@@ -133,14 +160,15 @@ void loop() {
   }
   
   for (int y = 0; y< 8; y++){
-    digitalWrite(rows[y], LOW);  
+    
     for (int x = 0; x < 8; x++){
       digitalWrite(cols[x], img[index % 10][x][y] == 1 ? HIGH : LOW);  
     }
 
-   delayMicroseconds(2000);    
+   digitalWrite(rows[y], LOW);  
+   delayMicroseconds(10000);    
    digitalWrite(rows[y], HIGH);
-
+   delayMicroseconds(10000);
 
 
   }
