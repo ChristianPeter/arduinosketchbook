@@ -11,9 +11,10 @@ void setup(){
 
 void loop(){
   int val = analogRead(0);
-//  count ++;
+  count ++;
   
-  printByte(val / 4);
+  //printByte(count);
+  printBarValue(val / 4);
   delay(50);
 }
 
@@ -26,5 +27,18 @@ void printByte(byte num){
       digitalWrite(pins[i], LOW);
     }
     num = num >> 1;
+  }
+}
+
+
+void printBarValue(byte val){
+  for (int i = 0; i < numberOfPins; i++){
+    if (val > 0) { 
+      digitalWrite(pins[i], HIGH);
+      val = val >> 1;
+    }
+    else {
+      digitalWrite(pins[i], LOW);
+    }
   }
 }
