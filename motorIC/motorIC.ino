@@ -13,14 +13,14 @@ int selectedSpeed = 255;
 void speedUp(int s){
   for (int i=0; i <= s; i++){
     analogWrite(motorSpeed, i);
-    delay(5);
+    delay(2);
   }
 }
 
 void slowDown(int s){
   for (int i=s; i >= 0; i--){
     analogWrite(motorSpeed, i);
-    delay(5);
+    delay(2);
   }
 }
 
@@ -46,7 +46,8 @@ void setup() {
   pinMode(motorB, OUTPUT);
   pinMode(startStop, INPUT);
   pinMode(dir, INPUT);
-  analogWrite(motorSpeed, selectedSpeed);
+//  analogWrite(motorSpeed, selectedSpeed);
+  speedUp(selectedSpeed);
   setDirection();
 }
 
