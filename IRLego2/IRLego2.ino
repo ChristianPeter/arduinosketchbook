@@ -61,56 +61,47 @@ const unsigned long LOWGAP = 260UL;
 
 const unsigned long HIGHGAP = 546UL;
 
+void sendNibble(byte nibble, int pin){
+  for (byte mask = 8; mask!=0; mask >>= 1){
+    if (mask & nibble) {
+      high(HIGHSIG, 38, pin);
+      wait(HIGHGAP);
+    }
+    else {
+      high(HIGHSIG, 38, pin);
+      wait(LOWGAP);
+    }
+  } 
+}
 
-void sendSeq(unsigned int seq, int pin){
+void sendSeq(byte nib1, byte nib2, byte nib3, int pin){
 
   unsigned long t = micros();
 
+  byte lcrc = 15 ^ nib1 ^ nib2 ^ nib3;
   // start bit  
   high(HIGHSIG, 38, 13);
   wait(HEADERGAP);
 
-  //1000 0001 0101 0011
-  //1000
-  high(HIGHSIG, 38, 13);
-  wait(HIGHGAP);
-  high(HIGHSIG, 38, 13);
-  wait(LOWGAP);
-  high(HIGHSIG, 38, 13);
-  wait(LOWGAP);
-  high(HIGHSIG, 38, 13);
-  wait(LOWGAP);
-  
-  // 0001
-  high(HIGHSIG, 38, 13);
-  wait(LOWGAP);
-  high(HIGHSIG, 38, 13);
-  wait(LOWGAP);
-  high(HIGHSIG, 38, 13);
-  wait(LOWGAP);
-  high(HIGHSIG, 38, 13);
-  wait(HIGHGAP);
-  
-  // 0101
-  high(HIGHSIG, 38, 13);
-  wait(LOWGAP);
-  high(HIGHSIG, 38, 13);
-  wait(HIGHGAP);
-  high(HIGHSIG, 38, 13);
-  wait(LOWGAP);
-  high(HIGHSIG, 38, 13);
-  wait(HIGHGAP);
-  
-  // 0011
-  high(HIGHSIG, 38, 13);
-  wait(LOWGAP);
-  high(HIGHSIG, 38, 13);
-  wait(LOWGAP);
-  high(HIGHSIG, 38, 13);
-  wait(HIGHGAP);
-  high(HIGHSIG, 38, 13);
-  wait(HIGHGAP);
+  sendNibble(nib1, 13);
+  sendNibble(nib2, 13);
+  sendNibble(nib3, 13);
+  sendNibble(lcrc, 13);  
+ 
+  /* 
+  for (byte mask = 128; mask!=0; mask >>= 1){  
+//  for (byte mask = 0x01; mask; mask <<= 1){
+    if (mask & seqHigh) {
+      high(HIGHSIG, 38, 13);
+      wait(HIGHGAP);
+    }
+    else {
+      high(HIGHSIG, 38, 13);
+      wait(LOWGAP);
+    }
     
+  }
+  */
   // stop bit
   high(HIGHSIG, 38, 13);
   wait(HEADERGAP);
@@ -138,8 +129,49 @@ void high(unsigned int time, int freq, int pinLED){
   }
 }
 
+void acc(){
+  sendSeq(B0100, B0001, B1111, 13);
+  delay(300);
+  sendSeq(B0100, B0010, B1111, 13);
+  delay(300);
+  sendSeq(B0100, B0011, B1111, 13);
+  delay(300);
+  sendSeq(B0100, B0100, B1111, 13);
+  delay(300);
+  sendSeq(B0100, B0101, B1111, 13);
+  delay(300);
+  
+  sendSeq(B0100, B0111, B1001, 13);
+  delay(300);
+  sendSeq(B0100, B0111, B1001, 13);
+  delay(300);
+  sendSeq(B0100, B0111, B1001, 13);
+  delay(300);
+  sendSeq(B0100, B0011, B1001, 13);
+  delay(300);
+  sendSeq(B0100, B0011, B1001, 13);
+  delay(300);
+  sendSeq(B0100, B1011, B1001, 13);
+  delay(300);
+  sendSeq(B0100, B1011, B1001, 13);
+  delay(300);
+  
+  
+}
+
+void dec(){
+  sendSeq(B0100, B0001, B1111, 13);
+  delay(300);
+  sendSeq(B0100, B1000, B1000, 13);
+  delay(300);
+}
 // the loop function runs over and over again forever
 void loop() {
-  sendSeq(128, 13);
-  delay(1000);
+  //1000 0001 0101 0011
+
+  //sendSeq(B1000, B0001, B0101, 13);
+  //sendSeq(B0100, B0001, B1111, 13);
+  acc();
+  delay(3000);
+  
 }
