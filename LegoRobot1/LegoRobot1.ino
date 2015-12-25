@@ -2,10 +2,10 @@
 const byte irpin = 3;
 const byte TRIGGER = 4;
 const byte ECHO = 2;
+const int DELAY = 300;
 
+double distance = 0.0;
 
-long laufzeit;
-double entfernung;
 
 void setup() {
   
@@ -178,7 +178,9 @@ void turnRight(byte s){
 
 // distance checks:
 
-void sonic(){
+double sonic(){
+    long laufzeit;
+    double entfernung;
     // Einen Impuls auslösen
     digitalWrite(TRIGGER, HIGH);
     delayMicroseconds(5);
@@ -196,12 +198,19 @@ void sonic(){
     Serial.print(entfernung);
     Serial.println(" mm");
 
-    delay(100);
+    //delay(100);
+    
+    return entfernung;
 
 }
 
+
+byte cSpeed = 0;
 // the loop function runs over and over again forever
+unsigned long counter = 0;
+
 void loop() {
+  counter++;
   //1000 0001 0101 0011
 
   //sendSeq(B1000, B0001, B0101, irpin);
@@ -209,9 +218,53 @@ void loop() {
   //acc();
   
   //driveFW(7);
-  turnRight(2);
+  //turnRight(2);
   
-  sonic();
-  delay(500);
+  distance = sonic();
   
+  
+  if (distance < 150) {    
+    driveStop();
+    delay(DELAY);
+    driveBW(3);
+    delay(DELAY);
+    driveBW(5);
+    delay(DELAY);
+    driveBW(7);
+    delay(DELAY);
+    if (random(300) > 150){
+      turnRight(7);
+      delay(DELAY + random(DELAY)*5);
+      turnRight(7);
+    }
+    else {
+      turnLeft(7);
+      delay(DELAY +random(DELAY)*5);
+      turnLeft(7);
+    }
+    delay(DELAY); 
+    cSpeed = 0;    
+  }
+  driveFW(cSpeed);
+  delay(DELAY);
+  
+  if (cSpeed <7) cSpeed ++;
+  
+  if (counter % 10 == 0 && random(100) > 90) {
+    cSpeed = 0;
+    driveStop();
+    delay(DELAY);
+    if (random(300) > 150){
+      turnRight(7);
+      delay(DELAY + random(DELAY)*5);
+      turnRight(7);
+    }
+    else {
+      turnLeft(7);
+      delay(DELAY +random(DELAY)*5);
+      turnLeft(7);
+    }
+    delay(DELAY);
+    
+  } 
 }

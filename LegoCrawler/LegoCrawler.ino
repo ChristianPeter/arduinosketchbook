@@ -2,28 +2,39 @@
 const byte irpin = 3;
 const byte TRIGGER = 4;
 const byte ECHO = 2;
+const byte FTRIGGER = 5;
+const byte FECHO = 6;
 
+const byte LEFT = 7;
+const byte FORWARDS = 7;
+const byte NEUTRAL = 8;
+const byte RIGHT = 9;
+const byte BACKWARDS = 9;
+const int DELAY = 300;
 
-long laufzeit;
-double entfernung;
+double distance = 0.0;
+double fdistance = 0.0;
+
 
 void setup() {
   
   pinMode(irpin, OUTPUT);  
   pinMode(TRIGGER, OUTPUT);
   pinMode(ECHO, INPUT);
-  
+  pinMode(FTRIGGER, OUTPUT);
+  pinMode(FECHO, INPUT);
   
   digitalWrite(TRIGGER, LOW);
+  digitalWrite(FTRIGGER, LOW);
   // TRIGGER muss mindestens 2µs LOW sein
   delayMicroseconds(2);
   
-  Serial.begin(9600); 
+  Serial.begin(57600); 
   while (!Serial) {
     ; // wait for serial port to connect. Needed for Leonardo only
   }
   
-  Serial.println("ready.");
+  Serial.println("LegoCrawler: ready.");
   
 }
 
@@ -153,6 +164,10 @@ void dec(){
 
 
 void drive(byte a, byte b){
+  Serial.print("drive: ");
+  Serial.print(a);
+  Serial.print(":");
+  Serial.println(b);
   sendSeq(B0100, a, b, irpin);
 }
 
@@ -178,30 +193,95 @@ void turnRight(byte s){
 
 // distance checks:
 
-void sonic(){
+double sonic(byte t, byte e){
+    long laufzeit;
+    double entfernung;
     // Einen Impuls auslösen
-    digitalWrite(TRIGGER, HIGH);
+    digitalWrite(t, HIGH);
     delayMicroseconds(5);
-    digitalWrite(TRIGGER, LOW);
+    digitalWrite(t, LOW);
 
     // Messen, wann der reflektierte Impuls zurückkommt
-    laufzeit = pulseIn(ECHO, HIGH);
+    laufzeit = pulseIn(e, HIGH);
 
     // Pro Meter benötigt der Schall in Luft ca. 2,9 ms
     // pulseIn misst Mikrosekunden, also 2,9 µs pro Millimeter
     // Weg geht hin und zurück, also mal 2
     entfernung = (double) laufzeit / (2.9 * 2.0);
-
-    Serial.print("Entfernung zum Objekt: ");
-    Serial.print(entfernung);
-    Serial.println(" mm");
-
-    delay(100);
-
+    
+    return entfernung;
 }
 
+
+
 // the loop function runs over and over again forever
-void loop() {
+unsigned long counter = 0;
+byte cSpeed = BACKWARDS;
+byte cDir = NEUTRAL;
+
+void drive(){
+  drive(cDir,cSpeed);
+  delay(DELAY);
+}
+
+void stopBackwards(){
+  cSpeed = NEUTRAL;
+  drive();
+  cSpeed = FORWARDS;
+  cDir = cDir == LEFT? RIGHT: LEFT;
+}
+
+void stopForwards(){
+  cSpeed = NEUTRAL;
+  cDir = NEUTRAL;
+  drive();
+  cSpeed = BACKWARDS;
+}
+
+void loop(){
+  counter++;
+  distance = sonic(TRIGGER, ECHO);
+  fdistance = sonic(FTRIGGER, FECHO);
+  
+  Serial.print("Entfernung zum Objekt back: ");
+  Serial.print(distance);
+  Serial.println(" mm");
+  Serial.print("Entfernung zum Objekt front: ");
+  Serial.print(fdistance);
+  Serial.println(" mm");
+  
+  if (cSpeed == NEUTRAL){
+    if (fdistance > 500){
+      cSpeed = FORWARDS;
+    }
+  }
+  if (cSpeed == BACKWARDS){
+    if (distance < 150){
+      stopBackwards();
+    }
+  }
+  if (cSpeed == FORWARDS){
+    if (fdistance < 150){
+      stopForwards();
+    }
+  }
+/*  
+  if (random(100) > 90){
+    cDir = cDir == LEFT? RIGHT: LEFT;
+    counter = 0;
+  }
+  */
+  /*
+  if (counter > 10) {
+    cDir = NEUTRAL;
+  }*/
+    
+  
+  drive();  
+
+}
+void loop_old() {
+  counter++;
   //1000 0001 0101 0011
 
   //sendSeq(B1000, B0001, B0101, irpin);
@@ -209,9 +289,53 @@ void loop() {
   //acc();
   
   //driveFW(7);
-  turnRight(2);
+  //turnRight(2);
   
-  sonic();
-  delay(500);
+  distance = sonic(TRIGGER, ECHO);
   
+  
+  if (distance < 150) {    
+    driveStop();
+    delay(DELAY);
+    driveBW(3);
+    delay(DELAY);
+    driveBW(5);
+    delay(DELAY);
+    driveBW(7);
+    delay(DELAY);
+    if (random(300) > 150){
+      turnRight(7);
+      delay(DELAY + random(DELAY)*5);
+      turnRight(7);
+    }
+    else {
+      turnLeft(7);
+      delay(DELAY +random(DELAY)*5);
+      turnLeft(7);
+    }
+    delay(DELAY); 
+    cSpeed = 0;    
+  }
+  driveFW(cSpeed);
+  delay(DELAY);
+  
+  if (cSpeed <7) cSpeed ++;
+  
+  if (counter % 10 == 0 && random(100) > 90) {
+    cSpeed = 0;
+    driveStop();
+    delay(DELAY);
+    if (random(300) > 150){
+      turnRight(7);
+      delay(DELAY + random(DELAY)*5);
+      turnRight(7);
+    }
+    else {
+      turnLeft(7);
+      delay(DELAY +random(DELAY)*5);
+      turnLeft(7);
+    }
+    delay(DELAY);
+    
+  } 
 }
